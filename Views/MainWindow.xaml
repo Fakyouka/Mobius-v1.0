@@ -86,8 +86,9 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Refresh (green) -->
@@ -108,8 +109,26 @@
                             Command="{Binding Library.ToggleSpeechCommand}"
                             Margin="0,0,10,0"/>
 
-                    <!-- Settings (gray) -->
+                    <!-- Steam Search -->
                     <Button Grid.Column="2"
+                            Style="{StaticResource IconButton}"
+                            Background="{StaticResource PurpleBar2Brush}"
+                            Content="🔍"
+                            ToolTip="Поиск игр в Steam"
+                            Command="{Binding Library.OpenSteamSearchCommand}"
+                            Margin="0,0,10,0"/>
+
+                    <!-- Add local app -->
+                    <Button Grid.Column="3"
+                            Style="{StaticResource IconButton}"
+                            Background="{StaticResource PurpleBar2Brush}"
+                            Content="＋"
+                            ToolTip="Добавить приложение (exe)"
+                            Command="{Binding Library.AddAppCommand}"
+                            Margin="0,0,10,0"/>
+
+                    <!-- Settings (gray) -->
+                    <Button Grid.Column="4"
                             Style="{StaticResource IconButton}"
                             Background="{StaticResource GrayDarkBrush}"
                             Content="⚙"
@@ -117,28 +136,11 @@
                             Command="{Binding Library.OpenSettingsCommand}"
                             Margin="0,0,10,0"/>
 
-                    <TextBlock Grid.Column="3"
-                               Text="{Binding Library.DeleteModeLabel}"
+                    <TextBlock Grid.Column="5"
+                               Text="Mobius • Library"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                VerticalAlignment="Center"
                                Margin="14,0,0,0"/>
-
-                    <!-- Add / Delete menu -->
-                    <Button Grid.Column="4"
-                            Style="{StaticResource IconButton}"
-                            Background="{StaticResource PurpleBar2Brush}"
-                            Content="+/−"
-                            ToolTip="Добавить или удалить приложение"
-                            Margin="10,0,0,0">
-                        <Button.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Добавить приложение" Command="{Binding Library.AddAppCommand}"/>
-                                <Separator/>
-                                <MenuItem Header="Включить удаление" Command="{Binding Library.EnterDeleteModeCommand}"/>
-                                <MenuItem Header="Выключить удаление" Command="{Binding Library.ExitDeleteModeCommand}"/>
-                            </ContextMenu>
-                        </Button.ContextMenu>
-                    </Button>
                 </Grid>
             </Border>
         </Grid>
