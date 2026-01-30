@@ -2,7 +2,10 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Mobius.Models;
+using Mobius.Services.Steam;
 using Mobius.Utils;
 using Win32OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
@@ -13,43 +16,36 @@ namespace Mobius.ViewModels
         private readonly MainViewModel _root;
 
         private bool _speechMasterEnabled = true;
-        private bool _deleteMode;
         private bool _debugEnabled;
         private bool _debugPanelOpen;
+
+        private string _lastHeardPartial;
+        private string _lastHeardFinal;
+
+        // app settings modal
+        private bool _isAppSettingsOpen;
+        private AppEntryModel _selectedApp;
 
         public LibraryViewModel(MainViewModel root)
         {
             _root = root;
 
-            RefreshCommand = new RelayCommand(Refresh);
-            ToggleSpeechCommand = new RelayCommand(ToggleSpeech);
-
-            // ✅ toggle settings
+            RefreshCommand = new RelayCommand(async () => await RefreshAsync());
+            ToggleSpeechCommand = new RelayCommand(() => SpeechMasterEnabled = !SpeechMasterEnabled);
             OpenSettingsCommand = new RelayCommand(() => _root.ToggleSettings());
 
             AddAppCommand = new RelayCommand(AddApp);
-            EnterDeleteModeCommand = new RelayCommand(() => DeleteMode = true, () => Apps.Count > 0);
-            ExitDeleteModeCommand = new RelayCommand(() => DeleteMode = false);
-
-            ToggleDebugPanelCommand = new RelayCommand(() => DebugPanelOpen = !DebugPanelOpen);
 
             CardClickCommand = new RelayCommand<AppEntryModel>(LaunchOrSelect);
             ChangeIconCommand = new RelayCommand<AppEntryModel>(ChangeIcon);
 
-            RunContextCommand = new RelayCommand<AppEntryModel>(LaunchOrSelect);
-            AddPhraseContextCommand = new RelayCommand<AppEntryModel>(AddDefaultPhrase);
-            RemovePhraseContextCommand = new RelayCommand<AppEntryModel>(RemoveLastPhrase);
+            OpenAppSettingsCommand = new RelayCommand<AppEntryModel>(OpenAppSettings);
+            CloseAppSettingsCommand = new RelayCommand(() => IsAppSettingsOpen = false);
 
-            // demo
-            Apps.Add(new AppEntryModel { Name = "Counter-Strike 2", SourceType = AppSourceType.Steam, SourceText = "Steam • AppID: 730" });
-            Apps.Add(new AppEntryModel { Name = "Dota 2", SourceType = AppSourceType.Steam, SourceText = "Steam • AppID: 570" });
-            Apps.Add(new AppEntryModel { Name = "Satisfactory", SourceType = AppSourceType.Steam, SourceText = "Steam • AppID: 526870" });
+            AddPhraseCommand = new RelayCommand(AddPhrase, () => SelectedApp != null);
+            RemovePhraseCommand = new RelayCommand<PhraseModel>(RemovePhrase);
 
-            foreach (var a in Apps)
-            {
-                a.Phrases.Add("запусти " + a.Name.ToLowerInvariant());
-                a.Phrases.Add(a.Name.ToLowerInvariant());
-            }
+            _ = RefreshAsync();
         }
 
         public ObservableCollection<AppEntryModel> Apps { get; } = new ObservableCollection<AppEntryModel>();
@@ -60,17 +56,15 @@ namespace Mobius.ViewModels
         public RelayCommand OpenSettingsCommand { get; }
 
         public RelayCommand AddAppCommand { get; }
-        public RelayCommand EnterDeleteModeCommand { get; }
-        public RelayCommand ExitDeleteModeCommand { get; }
-
-        public RelayCommand ToggleDebugPanelCommand { get; }
 
         public RelayCommand<AppEntryModel> CardClickCommand { get; }
         public RelayCommand<AppEntryModel> ChangeIconCommand { get; }
 
-        public RelayCommand<AppEntryModel> RunContextCommand { get; }
-        public RelayCommand<AppEntryModel> AddPhraseContextCommand { get; }
-        public RelayCommand<AppEntryModel> RemovePhraseContextCommand { get; }
+        public RelayCommand<AppEntryModel> OpenAppSettingsCommand { get; }
+        public RelayCommand CloseAppSettingsCommand { get; }
+
+        public RelayCommand AddPhraseCommand { get; }
+        public RelayCommand<PhraseModel> RemovePhraseCommand { get; }
 
         public bool SpeechMasterEnabled
         {
@@ -78,27 +72,9 @@ namespace Mobius.ViewModels
             set
             {
                 if (Set(ref _speechMasterEnabled, value))
-                {
-                    foreach (var a in Apps) a.SpeechEnabled = value;
-                    Raise(nameof(SpeechButtonLabel));
-                    AddLog($"Speech master: {(value ? "ON" : "OFF")}");
-                }
+                    AddLog("Speech master: " + (value ? "ON" : "OFF"));
             }
         }
-
-        public string SpeechButtonLabel => SpeechMasterEnabled ? "🎤" : "🔇";
-
-        public bool DeleteMode
-        {
-            get => _deleteMode;
-            set
-            {
-                if (Set(ref _deleteMode, value))
-                    Raise(nameof(DeleteModeLabel));
-            }
-        }
-
-        public string DeleteModeLabel => $"Режим удаления: {(DeleteMode ? "Включен" : "Выключен")}";
 
         public bool DebugEnabled
         {
@@ -108,7 +84,6 @@ namespace Mobius.ViewModels
                 if (Set(ref _debugEnabled, value))
                 {
                     if (!value) DebugPanelOpen = false;
-                    AddLog($"Debug enabled: {(value ? "ON" : "OFF")}");
                 }
             }
         }
@@ -119,15 +94,74 @@ namespace Mobius.ViewModels
             set => Set(ref _debugPanelOpen, value);
         }
 
+        public string LastHeardPartial
+        {
+            get => _lastHeardPartial;
+            set => Set(ref _lastHeardPartial, value);
+        }
+
+        public string LastHeardFinal
+        {
+            get => _lastHeardFinal;
+            set => Set(ref _lastHeardFinal, value);
+        }
+
+        public bool IsAppSettingsOpen
+        {
+            get => _isAppSettingsOpen;
+            set => Set(ref _isAppSettingsOpen, value);
+        }
+
+        public AppEntryModel SelectedApp
+        {
+            get => _selectedApp;
+            set
+            {
+                if (Set(ref _selectedApp, value))
+                    AddPhraseCommand.RaiseCanExecuteChanged();
+            }
+        }
+
         public void AddLog(string text)
         {
             if (!DebugEnabled) return;
             DebugLogs.Insert(0, $"[{DateTime.Now:HH:mm:ss}] {text}");
         }
 
-        private void Refresh() => AddLog("Refresh list");
+        private async Task RefreshAsync()
+        {
+            var steamPath = SteamService.TryGetSteamPath();
+            var games = await Task.Run(() => SteamService.GetInstalledGames());
 
-        private void ToggleSpeech() => SpeechMasterEnabled = !SpeechMasterEnabled;
+            var items = await Task.Run(() =>
+            {
+                return games.Select(g =>
+                {
+                    var icon = SteamIconResolver.TryResolveSquareIcon(steamPath, g.AppId);
+                    var app = new AppEntryModel
+                    {
+                        Name = g.Name,
+                        SourceType = AppSourceType.Steam,
+                        SourceText = $"Steam • AppID: {g.AppId}",
+                        AppId = g.AppId,
+                        InstallDir = g.InstallDir,
+                        IconPath = icon,
+                        SpeechEnabled = true
+                    };
+
+                    // ✅ FIX: PhraseModel instead of string
+                    app.Phrases.Add(new PhraseModel(g.Name.ToLowerInvariant()));
+                    app.Phrases.Add(new PhraseModel("запусти " + g.Name.ToLowerInvariant()));
+
+                    return app;
+                }).ToList();
+            });
+
+            Apps.Clear();
+            foreach (var i in items) Apps.Add(i);
+
+            AddLog($"Steam scan: {Apps.Count} apps");
+        }
 
         private void AddApp()
         {
@@ -136,7 +170,6 @@ namespace Mobius.ViewModels
                 Title = "Выбор exe-файла",
                 Filter = "Executable (*.exe)|*.exe|All files (*.*)|*.*"
             };
-
             if (exeDlg.ShowDialog() != true) return;
 
             var iconDlg = new Win32OpenFileDialog
@@ -156,34 +189,42 @@ namespace Mobius.ViewModels
                 ExePath = exeDlg.FileName,
                 IconPath = icon,
                 SourceType = AppSourceType.Manual,
-                SourceText = "Local • Manual"
+                SourceText = "Local • Manual",
+                SpeechEnabled = true
             };
-            app.Phrases.Add("запусти " + name.ToLowerInvariant());
-            Apps.Insert(0, app);
 
-            AddLog($"Added app: {name}");
+            // ✅ FIX
+            app.Phrases.Add(new PhraseModel(name.ToLowerInvariant()));
+            app.Phrases.Add(new PhraseModel("запусти " + name.ToLowerInvariant()));
+
+            Apps.Insert(0, app);
+        }
+
+        public void LaunchFromVoice(AppEntryModel app)
+        {
+            if (app == null) return;
+            LaunchOrSelect(app);
         }
 
         public void LaunchOrSelect(AppEntryModel app)
         {
             if (app == null) return;
 
-            if (DeleteMode)
-            {
-                Apps.Remove(app);
-                AddLog($"Removed app: {app.Name}");
-                return;
-            }
-
             foreach (var a in Apps) a.IsRunning = false;
             app.IsRunning = true;
 
-            AddLog($"Launch: {app.Name}");
-
             try
             {
+                if (app.SourceType == AppSourceType.Steam && app.AppId > 0)
+                {
+                    Process.Start("steam://run/" + app.AppId);
+                    return;
+                }
+
                 if (!string.IsNullOrWhiteSpace(app.ExePath) && File.Exists(app.ExePath))
+                {
                     Process.Start(app.ExePath);
+                }
             }
             catch (Exception ex)
             {
@@ -202,26 +243,26 @@ namespace Mobius.ViewModels
             };
 
             if (dlg.ShowDialog() != true) return;
-
             app.IconPath = dlg.FileName;
-            AddLog($"Icon changed: {app.Name}");
         }
 
-        private void AddDefaultPhrase(AppEntryModel app)
+        private void OpenAppSettings(AppEntryModel app)
         {
             if (app == null) return;
-            app.Phrases.Add("новая фраза");
-            AddLog($"Phrase added for {app.Name}");
+            SelectedApp = app;
+            IsAppSettingsOpen = true;
         }
 
-        public void RemoveLastPhrase(AppEntryModel app)
+        private void AddPhrase()
         {
-            if (app == null) return;
-            if (app.Phrases.Count == 0) return;
+            if (SelectedApp == null) return;
+            SelectedApp.Phrases.Add(new PhraseModel("новая фраза"));
+        }
 
-            var phrase = app.Phrases[app.Phrases.Count - 1];
-            app.Phrases.RemoveAt(app.Phrases.Count - 1);
-            AddLog($"Phrase removed for {app.Name}: {phrase}");
+        private void RemovePhrase(PhraseModel phrase)
+        {
+            if (SelectedApp == null || phrase == null) return;
+            SelectedApp.Phrases.Remove(phrase);
         }
     }
 }

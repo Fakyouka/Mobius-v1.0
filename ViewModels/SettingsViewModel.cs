@@ -2,12 +2,8 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using Mobius.Utils;
-
-// WinForms only for folder picker
 using WinFormsFolderBrowserDialog = System.Windows.Forms.FolderBrowserDialog;
 using WinFormsDialogResult = System.Windows.Forms.DialogResult;
-
-// NAudio
 using NAudio.CoreAudioApi;
 
 namespace Mobius.ViewModels
@@ -19,6 +15,7 @@ namespace Mobius.ViewModels
         private MicDevice _selectedMicrophone;
         private string _saveFolder;
         private bool _debugEnabled;
+        private string _voskModelPath;
 
         public SettingsViewModel(MainViewModel root)
         {
@@ -26,12 +23,11 @@ namespace Mobius.ViewModels
 
             BackCommand = new RelayCommand(() => _root.ShowLibrary());
             ChooseSaveFolderCommand = new RelayCommand(ChooseSaveFolder);
-
             SaveToFileCommand = new RelayCommand(SaveToFile);
             LoadFromFileCommand = new RelayCommand(LoadFromFile);
 
-            // default: рядом с exe (обычно CurrentDirectory)
             SaveFolder = Directory.GetCurrentDirectory();
+            VoskModelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "vosk-model");
 
             LoadMicrophones();
             if (Microphones.Count > 0)
@@ -46,12 +42,11 @@ namespace Mobius.ViewModels
             set
             {
                 if (Set(ref _selectedMicrophone, value))
-                {
-                    // можно потом использовать value.Id в распознавании
-                    _root.Library?.AddLog("Selected mic: " + (value?.Name ?? "(null)"));
-                }
+                    _root.Voice.UpdateState();
             }
         }
+
+        public string SelectedMicrophoneName => _selectedMicrophone?.Name;
 
         public string SaveFolder
         {
@@ -66,9 +61,19 @@ namespace Mobius.ViewModels
             {
                 if (Set(ref _debugEnabled, value))
                 {
-                    if (_root.Library != null)
-                        _root.Library.DebugEnabled = value;
+                    _root.Library.DebugEnabled = value;
+                    _root.Library.DebugPanelOpen = value;
                 }
+            }
+        }
+
+        public string VoskModelPath
+        {
+            get => _voskModelPath;
+            set
+            {
+                if (Set(ref _voskModelPath, value))
+                    _root.Voice.UpdateState();
             }
         }
 
@@ -80,7 +85,6 @@ namespace Mobius.ViewModels
         private void LoadMicrophones()
         {
             Microphones.Clear();
-
             try
             {
                 using (var enumerator = new MMDeviceEnumerator())
@@ -90,11 +94,9 @@ namespace Mobius.ViewModels
                         Microphones.Add(new MicDevice(d.ID, d.FriendlyName));
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                // если NAudio не установлен/не доступен — не ломаем UI
                 Microphones.Add(new MicDevice("default", "Default Microphone"));
-                _root.Library?.AddLog("Mic enumerate failed: " + ex.Message);
             }
         }
 
@@ -104,7 +106,6 @@ namespace Mobius.ViewModels
             {
                 dlg.Description = "Выберите папку для сохранений";
                 dlg.SelectedPath = Directory.Exists(SaveFolder) ? SaveFolder : Directory.GetCurrentDirectory();
-
                 if (dlg.ShowDialog() == WinFormsDialogResult.OK)
                     SaveFolder = dlg.SelectedPath;
             }
@@ -116,30 +117,19 @@ namespace Mobius.ViewModels
                 Directory.CreateDirectory(SaveFolder);
 
             var file = Path.Combine(SaveFolder, "mobius_config.json");
-
-            // TODO: нормальная сериализация настроек/приложений
             File.WriteAllText(file, "{ \"todo\": \"serialize\" }");
-
-            _root.Library?.AddLog("Saved config: " + file);
         }
 
         private void LoadFromFile()
         {
-            // TODO: загрузка из SaveFolder (позже сделаем список файлов)
-            _root.Library?.AddLog("Load: TODO (будет загрузка из папки сохранений)");
+            // TODO
         }
 
         public sealed class MicDevice
         {
-            public MicDevice(string id, string name)
-            {
-                Id = id;
-                Name = name;
-            }
-
+            public MicDevice(string id, string name) { Id = id; Name = name; }
             public string Id { get; }
             public string Name { get; }
-
             public override string ToString() => Name;
         }
     }

@@ -1,19 +1,30 @@
-﻿using Mobius.Utils;
+﻿using System.ComponentModel;
+using Mobius.Services.Voice;
+using Mobius.Utils;
 
 namespace Mobius.ViewModels
 {
     public sealed class MainViewModel : ObservableObject
     {
         private object _currentView;
-        private readonly LibraryViewModel _library;
-        private readonly SettingsViewModel _settings;
 
         public MainViewModel()
         {
-            _library = new LibraryViewModel(this);
-            _settings = new SettingsViewModel(this);
-            CurrentView = _library;
+            Library = new LibraryViewModel(this);
+            Settings = new SettingsViewModel(this);
+            Voice = new VoiceCoordinator(this);
+
+            CurrentView = Library;
+
+            Library.PropertyChanged += OnLibraryChanged;
+            Settings.PropertyChanged += OnSettingsChanged;
+
+            Voice.UpdateState();
         }
+
+        public LibraryViewModel Library { get; }
+        public SettingsViewModel Settings { get; }
+        public VoiceCoordinator Voice { get; }
 
         public object CurrentView
         {
@@ -21,17 +32,27 @@ namespace Mobius.ViewModels
             set => Set(ref _currentView, value);
         }
 
-        public LibraryViewModel Library => _library;
-        public SettingsViewModel Settings => _settings;
+        public void ShowLibrary() => CurrentView = Library;
+        public void ShowSettings() => CurrentView = Settings;
 
-        public void ShowLibrary() => CurrentView = _library;
-        public void ShowSettings() => CurrentView = _settings;
-
-        // ✅ toggle: если уже Settings -> закрыть (вернуть Library)
         public void ToggleSettings()
         {
-            if (ReferenceEquals(CurrentView, _settings)) ShowLibrary();
+            if (ReferenceEquals(CurrentView, Settings)) ShowLibrary();
             else ShowSettings();
+        }
+
+        private void OnLibraryChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(LibraryViewModel.SpeechMasterEnabled))
+                Voice.UpdateState();
+        }
+
+        private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SettingsViewModel.SelectedMicrophone))
+                Voice.UpdateState();
+            if (e.PropertyName == nameof(SettingsViewModel.VoskModelPath))
+                Voice.UpdateState();
         }
     }
 }

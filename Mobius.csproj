@@ -101,6 +101,8 @@
     <Compile Include="Models\PhraseModel.cs" />
     <Compile Include="Services\Steam\SteamIconResolver.cs" />
     <Compile Include="Services\Steam\SteamService.cs" />
+    <Compile Include="Services\Voice\VoiceCoordinator.cs" />
+    <Compile Include="Services\Voice\VoskSpeechService.cs" />
     <Compile Include="Utils\ObservableObject.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="ViewModels\AddAppViewModel.cs" />
@@ -181,7 +183,6 @@
     <Folder Include="Assets\Icons\" />
     <Folder Include="Assets\Images\" />
     <Folder Include="Services\Storage\" />
-    <Folder Include="Services\Voice\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
