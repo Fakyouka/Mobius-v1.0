@@ -1,0 +1,103 @@
+<UserControl x:Class="Mobius.Views.Pages.LibraryPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:Mobius.Views.Controls"
+             xmlns:models="clr-namespace:Mobius.Models">
+
+    <UserControl.Resources>
+        <Storyboard x:Key="ShakeStoryboard" RepeatBehavior="Forever">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)">
+                <EasingDoubleKeyFrame KeyTime="0:0:0.0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.05" Value="-1.5"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.10" Value="1.5"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="-1.2"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.20" Value="1.2"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.25" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+
+        <Style x:Key="AppItemPresenterStyle" TargetType="ContentPresenter">
+            <Setter Property="Margin" Value="0,0,18,18"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform X="0"/>
+                </Setter.Value>
+            </Setter>
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.DeleteMode, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                             Value="True">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard Storyboard="{StaticResource ShakeStoryboard}"/>
+                    </DataTrigger.EnterActions>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Style="{StaticResource H1}" Margin="0,2,0,14"><Run Language="ru-ru" Text="Библиотека"/><LineBreak/><Run Language="ru-ru"/></TextBlock>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Apps}">
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter" BasedOn="{StaticResource AppItemPresenterStyle}"/>
+                </ItemsControl.ItemContainerStyle>
+
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:AppEntryModel}">
+                        <Grid>
+                            <Grid.InputBindings>
+                                <MouseBinding MouseAction="LeftClick"
+                                              Command="{Binding DataContext.CardClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                              CommandParameter="{Binding}"/>
+                            </Grid.InputBindings>
+
+                            <controls:AppCard/>
+
+                            <!-- зона клика по иконке -->
+                            <Border Width="52"
+                                    Height="52"
+                                    CornerRadius="14"
+                                    Background="#00FFFFFF"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick"
+                                                  Command="{Binding DataContext.ChangeIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}"/>
+                                </Border.InputBindings>
+                            </Border>
+
+                            <Grid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Запустить"
+                                              Command="{Binding DataContext.RunContextCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                              CommandParameter="{Binding}"/>
+                                    <Separator/>
+                                    <MenuItem Header="Добавить фразу (пока заглушка)"
+                                              Command="{Binding DataContext.AddPhraseContextCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                              CommandParameter="{Binding}"/>
+                                    <MenuItem Header="Удалить последнюю фразу"
+                                              Command="{Binding DataContext.RemovePhraseContextCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                              CommandParameter="{Binding}"/>
+                                </ContextMenu>
+                            </Grid.ContextMenu>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

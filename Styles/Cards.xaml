@@ -1,0 +1,16 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style x:Key="AppCardBorder" TargetType="Border">
+        <Setter Property="CornerRadius" Value="18"/>
+        <Setter Property="Background" Value="{StaticResource PurpleCardBrush}"/>
+        <Setter Property="Padding" Value="14"/>
+        <Setter Property="Margin" Value="0,0,0,14"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="22" Opacity="0.18" ShadowDepth="0"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,16 @@
+<Window x:Class="Mobius.Views.SteamSearchWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Steam Search"
+        Width="600"
+        Height="400"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid>
+        <TextBlock Text="Steam Search Window (в разработке)"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   FontSize="18"
+                   Opacity="0.6"/>
+    </Grid>
+</Window>
