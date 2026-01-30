@@ -87,7 +87,6 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
@@ -109,17 +108,9 @@
                             Command="{Binding Library.ToggleSpeechCommand}"
                             Margin="0,0,10,0"/>
 
-                    <!-- Steam Search -->
-                    <Button Grid.Column="2"
-                            Style="{StaticResource IconButton}"
-                            Background="{StaticResource PurpleBar2Brush}"
-                            Content="🔍"
-                            ToolTip="Поиск игр в Steam"
-                            Command="{Binding Library.OpenSteamSearchCommand}"
-                            Margin="0,0,10,0"/>
-
+                   
                     <!-- Add local app -->
-                    <Button Grid.Column="3"
+                    <Button Grid.Column="2"
                             Style="{StaticResource IconButton}"
                             Background="{StaticResource PurpleBar2Brush}"
                             Content="＋"
@@ -128,7 +119,7 @@
                             Margin="0,0,10,0"/>
 
                     <!-- Settings (gray) -->
-                    <Button Grid.Column="4"
+                    <Button Grid.Column="3"
                             Style="{StaticResource IconButton}"
                             Background="{StaticResource GrayDarkBrush}"
                             Content="⚙"

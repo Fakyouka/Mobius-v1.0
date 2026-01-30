@@ -35,7 +35,6 @@ namespace Mobius.ViewModels
             OpenSettingsCommand = new RelayCommand(() => _root.ToggleSettings());
 
             AddAppCommand = new RelayCommand(AddApp);
-            OpenSteamSearchCommand = new RelayCommand(() => RequestOpenSteamSearch?.Invoke());
 
             CardClickCommand = new RelayCommand<AppEntryModel>(LaunchOrSelect);
             ChangeIconCommand = new RelayCommand<AppEntryModel>(ChangeIcon);
@@ -50,12 +49,6 @@ namespace Mobius.ViewModels
             _ = RefreshAsync();
         }
 
-        /// <summary>
-        /// MainWindow подписывается на это событие и открывает окно поиска Steam.
-        /// (VM не должен напрямую создавать окна)
-        /// </summary>
-        public event Action RequestOpenSteamSearch;
-
         public ObservableCollection<AppEntryModel> Apps { get; } = new ObservableCollection<AppEntryModel>();
         public ObservableCollection<string> DebugLogs { get; } = new ObservableCollection<string>();
 
@@ -64,7 +57,6 @@ namespace Mobius.ViewModels
         public RelayCommand OpenSettingsCommand { get; }
 
         public RelayCommand AddAppCommand { get; }
-        public RelayCommand OpenSteamSearchCommand { get; }
 
         public RelayCommand<AppEntryModel> CardClickCommand { get; }
         public RelayCommand<AppEntryModel> ChangeIconCommand { get; }
@@ -220,39 +212,6 @@ namespace Mobius.ViewModels
 
             Apps.Insert(0, app);
         }
-
-        /// <summary>
-        /// Добавление игры из окна поиска Steam.
-        /// Вызывается из MainWindow (handler на SteamSearchWindow.SetAddHandler).
-        /// </summary>
-        public void AddSteamFromSearch(SteamGameResult r)
-        {
-            if (r == null) return;
-
-            // не добавляем дубль
-            if (Apps.Any(a => a.SourceType == AppSourceType.Steam && a.AppId == r.AppId))
-            {
-                AddLog($"Steam add skipped: already exists (AppID {r.AppId})");
-                return;
-            }
-
-            var app = new AppEntryModel
-            {
-                Name = r.Name,
-                SourceType = AppSourceType.Steam,
-                SourceText = $"Steam • AppID: {r.AppId}",
-                AppId = r.AppId,
-                IconPath = r.IconPath,
-                SpeechEnabled = true
-            };
-
-            app.Phrases.Add(new PhraseModel(r.Name.ToLowerInvariant()));
-            app.Phrases.Add(new PhraseModel("запусти " + r.Name.ToLowerInvariant()));
-
-            Apps.Insert(0, app);
-            AddLog($"Steam added: {r.Name} (AppID {r.AppId})");
-        }
-
         public void LaunchFromVoice(AppEntryModel app)
         {
             if (app == null) return;

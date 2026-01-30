@@ -19,8 +19,6 @@ namespace Mobius.Views
             _vm = new MainViewModel();
             DataContext = _vm;
 
-            _vm.Library.RequestOpenSteamSearch += OpenSteamSearch;
-
             Loaded += (_, __) =>
             {
                 HookDebugPanel();
@@ -148,26 +146,6 @@ namespace Mobius.Views
             w.BeginAnimation(TopProperty, aTop);
             w.BeginAnimation(OpacityProperty, aOp);
         }
-
-        private void OpenSteamSearch()
-        {
-            try
-            {
-                var w = new SteamSearchWindow
-                {
-                    Owner = this,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                };
-
-                w.SetAddHandler(r => _vm.Library.AddSteamFromSearch(r));
-                w.ShowDialog();
-            }
-            catch
-            {
-                // ignore
-            }
-        }
-
         private void TopBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 2) return;

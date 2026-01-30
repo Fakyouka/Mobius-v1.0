@@ -18,16 +18,21 @@ namespace Mobius.Services.Steam
     {
         public static string TryGetSteamPath()
         {
+            // 1) HKCU\Software\Valve\Steam (SteamPath / InstallPath)
             try
             {
                 using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam"))
                 {
                     var v = key?.GetValue("SteamPath") as string;
                     if (!string.IsNullOrWhiteSpace(v) && Directory.Exists(v)) return v;
+
+                    var v2 = key?.GetValue("InstallPath") as string;
+                    if (!string.IsNullOrWhiteSpace(v2) && Directory.Exists(v2)) return v2;
                 }
             }
             catch { }
 
+            // 2) HKLM WOW6432Node
             try
             {
                 using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\WOW6432Node\Valve\Steam"))
@@ -38,8 +43,21 @@ namespace Mobius.Services.Steam
             }
             catch { }
 
+            // 3) Фоллбек: стандартные пути установки
+            try
+            {
+                var p1 = @"C:\Program Files (x86)\Steam";
+                if (Directory.Exists(p1)) return p1;
+
+                var p2 = @"C:\Program Files\Steam";
+                if (Directory.Exists(p2)) return p2;
+            }
+            catch { }
+
             return null;
         }
+
+
 
         public static List<SteamGameInfo> GetInstalledGames()
         {

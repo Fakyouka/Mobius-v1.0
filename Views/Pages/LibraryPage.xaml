@@ -7,32 +7,10 @@
 
     <UserControl.Resources>
         <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
-
-        <!-- на всякий случай, чтобы не падало, если в глобальных ресурсах нет -->
+        <!-- fallback, чтобы не падало, если глобального ключа нет -->
         <SolidColorBrush x:Key="AccentBrush" Color="#FF6D4CFF"/>
 
-        <!-- Маленькая квадратная кнопка (под стиль как на 2й фотке) -->
-        <Style x:Key="SquareIconBtn" TargetType="Button">
-            <Setter Property="Width" Value="56"/>
-            <Setter Property="Height" Value="56"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="Background" Value="{StaticResource PurpleCardBrush}"/>
-            <Setter Property="BorderBrush" Value="#00000000"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="18">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Кнопка-контейнер для карточки (чтобы клик по карточке запускал игру) -->
+        <!-- Кнопка-обёртка: клик по карточке = запуск -->
         <Style x:Key="CardButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="#00000000"/>
@@ -55,10 +33,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Заголовок -->
         <TextBlock Grid.Row="0"
                    Text="Библиотека"
                    Foreground="{StaticResource TextPrimaryBrush}"
@@ -66,23 +42,28 @@
                    FontWeight="SemiBold"
                    Margin="2,0,0,16"/>
 
-        <!-- Витрина игр (2 колонки) -->
+        <!-- Карточки игр/приложений -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <ListBox ItemsSource="{Binding Apps}"
                      Background="Transparent"
                      BorderThickness="0"
                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                     HorizontalContentAlignment="Stretch">
+                     HorizontalContentAlignment="Left">
+
                 <ListBox.ItemsPanel>
+                    <!-- WrapPanel не растягивает элементы как UniformGrid -->
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="2"/>
+                        <WrapPanel IsItemsHost="True"/>
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
 
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="0"/>
+                        <!-- компактные размеры как на референсе -->
+                        <Setter Property="Width" Value="430"/>
+                        <Setter Property="Height" Value="132"/>
                         <Setter Property="Margin" Value="0,0,18,18"/>
+                        <Setter Property="Padding" Value="0"/>
                         <Setter Property="Background" Value="Transparent"/>
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -99,25 +80,26 @@
 
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:AppEntryModel}">
-                        <!-- Клик по карточке = запуск -->
                         <Button Style="{StaticResource CardButtonStyle}"
                                 Command="{Binding DataContext.CardClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 CommandParameter="{Binding}">
-                            <!-- Внутри уже есть ⚙ кнопка -->
                             <controls:AppCard
                                 SettingsCommand="{Binding DataContext.OpenAppSettingsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 SettingsCommandParameter="{Binding}"/>
                         </Button>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
+
             </ListBox>
         </ScrollViewer>
 
-        <!-- Нижняя панель (как на 2й фотке: кнопки слева) -->
-
-        <!-- Модалка настроек приложения (фразы) -->
-        <Grid Visibility="{Binding IsAppSettingsOpen, Converter={StaticResource BoolToVis}}"
+        <!-- Модалка фраз: поверх всего контента -->
+        <Grid Grid.Row="0"
+              Grid.RowSpan="2"
+              Panel.ZIndex="999"
+              Visibility="{Binding IsAppSettingsOpen, Converter={StaticResource BoolToVis}}"
               Background="#AA000000">
+
             <Border Width="560"
                     MaxHeight="520"
                     CornerRadius="22"
@@ -173,11 +155,13 @@
                             Margin="0,28,0,0"
                             Background="{StaticResource BgSurface2Brush}"
                             CornerRadius="18">
+
                         <ListBox ItemsSource="{Binding SelectedApp.Phrases}"
                                  Background="Transparent"
                                  BorderThickness="0"
                                  Padding="12"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:PhraseModel}">
                                     <Grid Margin="0,0,0,10">
@@ -208,6 +192,7 @@
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
+
                         </ListBox>
                     </Border>
 
