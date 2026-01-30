@@ -7,166 +7,139 @@
 
     <UserControl.Resources>
         <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- на всякий случай, чтобы не падало, если в глобальных ресурсах нет -->
         <SolidColorBrush x:Key="AccentBrush" Color="#FF6D4CFF"/>
 
-        <Storyboard x:Key="ShakeStoryboard" RepeatBehavior="Forever">
-            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)">
-                <EasingDoubleKeyFrame KeyTime="0:0:0.0" Value="0"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:0.05" Value="-1.5"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:0.10" Value="1.5"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:0.15" Value="-1.2"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:0.20" Value="1.2"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:0.25" Value="0"/>
-            </DoubleAnimationUsingKeyFrames>
-        </Storyboard>
-
-        <Style x:Key="AppItemPresenterStyle" TargetType="ContentPresenter">
-            <Setter Property="Margin" Value="0,0,18,18"/>
-            <Setter Property="RenderTransform">
-                <Setter.Value>
-                    <TranslateTransform X="0"/>
-                </Setter.Value>
-            </Setter>
-
-            <!-- если потом вернёшь DeleteMode – можно снова включить shake -->
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.IsDeleteMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
-                    <Setter Property="RenderTransform">
-                        <Setter.Value>
-                            <TranslateTransform X="0"/>
-                        </Setter.Value>
-                    </Setter>
-                    <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
-                    <Setter Property="UIElement.RenderTransform">
-                        <Setter.Value>
-                            <TranslateTransform X="0"/>
-                        </Setter.Value>
-                    </Setter>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Мини-кнопки + / − -->
-        <Style x:Key="MiniIconBtn" TargetType="Button">
-            <Setter Property="Width" Value="28"/>
-            <Setter Property="Height" Value="28"/>
+        <!-- Маленькая квадратная кнопка (под стиль как на 2й фотке) -->
+        <Style x:Key="SquareIconBtn" TargetType="Button">
+            <Setter Property="Width" Value="56"/>
+            <Setter Property="Height" Value="56"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="Background" Value="{StaticResource GrayDarkBrush}"/>
+            <Setter Property="Background" Value="{StaticResource PurpleCardBrush}"/>
             <Setter Property="BorderBrush" Value="#00000000"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="10">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                        <Border Background="{TemplateBinding Background}" CornerRadius="18">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Кнопка-контейнер для карточки (чтобы клик по карточке запускал игру) -->
+        <Style x:Key="CardButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#00000000"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="14">
+    <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Style="{StaticResource H1}" Margin="0,2,0,14">
-            <Run Language="ru-ru" Text="Библиотека"/>
-        </TextBlock>
+        <!-- Заголовок -->
+        <TextBlock Grid.Row="0"
+                   Text="Библиотека"
+                   Foreground="{StaticResource TextPrimaryBrush}"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Margin="2,0,0,16"/>
 
+        <!-- Витрина игр (2 колонки) -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="280"/>
-                    <ColumnDefinition Width="18"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            <ListBox ItemsSource="{Binding Apps}"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                     HorizontalContentAlignment="Stretch">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2"/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
 
-                <!-- LEFT: apps list -->
-                <Border Grid.Column="0"
-                        Background="{StaticResource BgSurfaceBrush}"
-                        CornerRadius="22"
-                        Padding="12">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0,0,18,18"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <ContentPresenter/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:AppEntryModel}">
+                        <!-- Клик по карточке = запуск -->
+                        <Button Style="{StaticResource CardButtonStyle}"
+                                Command="{Binding DataContext.CardClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}">
+                            <!-- Внутри уже есть ⚙ кнопка -->
+                            <controls:AppCard
+                                SettingsCommand="{Binding DataContext.OpenAppSettingsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                SettingsCommandParameter="{Binding}"/>
+                        </Button>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ScrollViewer>
+
+        <!-- Нижняя панель (как на 2й фотке: кнопки слева) -->
+
+        <!-- Модалка настроек приложения (фразы) -->
+        <Grid Visibility="{Binding IsAppSettingsOpen, Converter={StaticResource BoolToVis}}"
+              Background="#AA000000">
+            <Border Width="560"
+                    MaxHeight="520"
+                    CornerRadius="22"
+                    Background="{StaticResource BgSurfaceBrush}"
+                    Padding="16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="14"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="14"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
                     <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="10"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="14"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Text="Apps"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Margin="2,0,0,0"/>
-
-                        <ListBox Grid.Row="2"
-                                 ItemsSource="{Binding Apps}"
-                                 SelectedItem="{Binding SelectedApp}"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type models:AppEntryModel}">
-                                    <controls:AppCard/>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="Padding" Value="0"/>
-                                    <Setter Property="Margin" Value="0,0,0,10"/>
-                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                    <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="ListBoxItem">
-                                                <Border Background="{TemplateBinding Background}"
-                                                        CornerRadius="14">
-                                                    <ContentPresenter/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ListBox.ItemContainerStyle>
-                        </ListBox>
-
-                        <!-- add/remove -->
-                        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="+" Style="{StaticResource MiniIconBtn}" Margin="0,0,8,0"
-                                    Command="{Binding AddAppCommand}"/>
-                            <Button Content="−" Style="{StaticResource MiniIconBtn}"
-                                    Command="{Binding RemoveSelectedAppCommand}"/>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <!-- RIGHT: details -->
-                <Border Grid.Column="2"
-                        Background="{StaticResource BgSurfaceBrush}"
-                        CornerRadius="22"
-                        Padding="14">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="14"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
                         <StackPanel>
                             <TextBlock Text="{Binding SelectedApp.Name}"
@@ -174,80 +147,92 @@
                                        FontSize="16"
                                        FontWeight="SemiBold"/>
 
-                            <TextBlock Text="{Binding SelectedApp.ExePath}"
+                            <TextBlock Text="{Binding SelectedApp.SourceText}"
                                        Foreground="{StaticResource TextSecondaryBrush}"
                                        FontSize="12"
-                                       Margin="0,4,0,0"
-                                       TextWrapping="Wrap"/>
+                                       Margin="0,6,0,0"/>
                         </StackPanel>
 
-                        <Grid Grid.Row="2">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="10"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="+" Style="{StaticResource MiniIconBtn}"
-                                            Command="{Binding AddPhraseCommand}"/>
-                                </StackPanel>
-
-                                <TextBlock Grid.Column="2"
-                                           Text="Редактируй прямо в списке. Минус — удалить строку."
-                                           Foreground="{StaticResource TextSecondaryBrush}"
-                                           VerticalAlignment="Center"/>
-                            </Grid>
-
-                            <!-- phrases list -->
-                            <!-- FIX: CornerRadius переносим на Border -->
-                            <Border Grid.Row="2"
-                                    Background="{StaticResource BgSurface2Brush}"
-                                    CornerRadius="18">
-                                <ListBox ItemsSource="{Binding SelectedApp.Phrases}"
-                                         Background="Transparent"
-                                         BorderThickness="0"
-                                         Padding="10"
-                                         ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type models:PhraseModel}">
-                                            <Grid Margin="0,0,0,10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-
-                                                <TextBox Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                         Background="{StaticResource BgWindowBrush}"
-                                                         Foreground="{StaticResource TextPrimaryBrush}"
-                                                         BorderBrush="#00000000"
-                                                         Padding="10"
-                                                         FontSize="13"
-                                                         VerticalContentAlignment="Center"/>
-
-                                                <Button Grid.Column="1"
-                                                        Content="−"
-                                                        Style="{StaticResource MiniIconBtn}"
-                                                        Margin="10,0,0,0"
-                                                        Command="{Binding DataContext.RemovePhraseCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                        CommandParameter="{Binding}"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Border>
-
-                        </Grid>
+                        <Button Grid.Column="1"
+                                Width="40"
+                                Height="40"
+                                FontSize="16"
+                                Background="{StaticResource GrayDarkBrush}"
+                                Foreground="{StaticResource TextPrimaryBrush}"
+                                BorderBrush="#00000000"
+                                Content="✕"
+                                Command="{Binding CloseAppSettingsCommand}"/>
                     </Grid>
-                </Border>
-            </Grid>
-        </ScrollViewer>
+
+                    <TextBlock Grid.Row="2"
+                               Text="Фразы (распознавание речи). Плюс — добавить строку, минус — удалить."
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,0,0,10"/>
+
+                    <Border Grid.Row="2"
+                            Margin="0,28,0,0"
+                            Background="{StaticResource BgSurface2Brush}"
+                            CornerRadius="18">
+                        <ListBox ItemsSource="{Binding SelectedApp.Phrases}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="12"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:PhraseModel}">
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="10"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBox Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 Background="{StaticResource BgWindowBrush}"
+                                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                                 BorderBrush="#00000000"
+                                                 Padding="10"
+                                                 FontSize="13"
+                                                 VerticalContentAlignment="Center"/>
+
+                                        <Button Grid.Column="2"
+                                                Width="40"
+                                                Height="40"
+                                                FontSize="16"
+                                                Background="{StaticResource GrayDarkBrush}"
+                                                Foreground="{StaticResource TextPrimaryBrush}"
+                                                BorderBrush="#00000000"
+                                                Content="−"
+                                                Command="{Binding DataContext.RemovePhraseCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+
+                    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Width="48"
+                                Height="40"
+                                Margin="0,0,10,0"
+                                FontSize="16"
+                                Background="{StaticResource GrayDarkBrush}"
+                                Foreground="{StaticResource TextPrimaryBrush}"
+                                BorderBrush="#00000000"
+                                Content="+"
+                                Command="{Binding AddPhraseCommand}"/>
+
+                        <Button Height="40"
+                                Padding="16,0"
+                                Background="{StaticResource GrayDarkBrush}"
+                                Foreground="{StaticResource TextPrimaryBrush}"
+                                BorderBrush="#00000000"
+                                Content="Очистить"
+                                Command="{Binding ClearPhrasesCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
     </Grid>
 </UserControl>
