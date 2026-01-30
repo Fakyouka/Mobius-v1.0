@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Input;
 using Mobius.Models;
 
 namespace Mobius.Views.Controls
@@ -12,14 +13,32 @@ namespace Mobius.Views.Controls
         public AppCard()
         {
             InitializeComponent();
-
             MouseLeftButtonDown += OnMouseLeftButtonDown;
-            MouseRightButtonUp += OnMouseRightButtonUp;
         }
+
+        // --- Settings Command DP (чтобы кнопка ⚙ могла вызвать команду страницы/VM) ---
+        public static readonly DependencyProperty SettingsCommandProperty =
+            DependencyProperty.Register(nameof(SettingsCommand), typeof(ICommand), typeof(AppCard), new PropertyMetadata(null));
+
+        public ICommand SettingsCommand
+        {
+            get => (ICommand)GetValue(SettingsCommandProperty);
+            set => SetValue(SettingsCommandProperty, value);
+        }
+
+        public static readonly DependencyProperty SettingsCommandParameterProperty =
+            DependencyProperty.Register(nameof(SettingsCommandParameter), typeof(object), typeof(AppCard), new PropertyMetadata(null));
+
+        public object SettingsCommandParameter
+        {
+            get => GetValue(SettingsCommandParameterProperty);
+            set => SetValue(SettingsCommandParameterProperty, value);
+        }
+        // ---------------------------------------------------------------------------
 
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // double click anywhere on card -> edit title (design)
+            // double click anywhere on card -> edit title
             if (e.ClickCount == 2)
             {
                 EnterTitleEditMode();
@@ -46,10 +65,7 @@ namespace Mobius.Views.Controls
             var model = DataContext as AppEntryModel;
 
             if (!commit && model != null)
-            {
-                // отмена -> вернуть старое имя
                 model.Name = _backupName ?? model.Name;
-            }
 
             if (TitleEdit != null) TitleEdit.Visibility = Visibility.Collapsed;
             if (TitleText != null) TitleText.Visibility = Visibility.Visible;
@@ -73,13 +89,7 @@ namespace Mobius.Views.Controls
 
         private void TitleEdit_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            // потеряли фокус -> считаем что сохранили
             ExitTitleEditMode(commit: true);
-        }
-
-        private void OnMouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            // контекстное меню задается в LibraryPage.xaml
         }
     }
 }

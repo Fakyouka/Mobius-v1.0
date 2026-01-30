@@ -97,12 +97,18 @@
     <Compile Include="Converters\BoolToBrushConverter.cs" />
     <Compile Include="Converters\BoolToVisibilityConverter.cs" />
     <Compile Include="Models\AppEntryModel.cs" />
+    <Compile Include="Models\AppModel.cs" />
     <Compile Include="Models\AppSourceType.cs" />
+    <Compile Include="Models\GameModel.cs" />
     <Compile Include="Models\PhraseModel.cs" />
+    <Compile Include="Services\AppService.cs" />
+    <Compile Include="Services\Steam\SteamApiClient.cs" />
     <Compile Include="Services\Steam\SteamIconResolver.cs" />
+    <Compile Include="Services\Steam\SteamSearchViewModel.cs" />
     <Compile Include="Services\Steam\SteamService.cs" />
     <Compile Include="Services\Voice\VoiceCoordinator.cs" />
     <Compile Include="Services\Voice\VoskSpeechService.cs" />
+    <Compile Include="Services\Voice\VoskVoiceService.cs" />
     <Compile Include="Utils\ObservableObject.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="ViewModels\AddAppViewModel.cs" />
@@ -149,6 +155,25 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Include="App.config" />
+    <Page Include="Views\Controls\TopBar.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Compile Include="Views\SteamSearchWindow.xaml.cs">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <DependentUpon>SteamSearchWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DebugPanelWindow.xaml.cs">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <DependentUpon>DebugPanelWindow.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Views\DebugPanelWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SteamSearchWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Include="Styles\Colors.xaml">

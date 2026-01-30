@@ -2,7 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:conv="clr-namespace:Mobius.Converters"
-             MinHeight="104">
+             MinHeight="92">
 
     <UserControl.Resources>
         <conv:BoolToBrushConverter x:Key="CardBrush"
@@ -15,7 +15,7 @@
 
     <Border Style="{StaticResource AppCardBorder}"
             Background="{Binding IsRunning, Converter={StaticResource CardBrush}}"
-            Padding="16">
+            Padding="12">
 
         <Grid>
             <Grid.ColumnDefinitions>
@@ -24,14 +24,34 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Icon -->
-            <Border Width="52"
-                    Height="52"
-                    CornerRadius="14"
-                    Background="{StaticResource BgSurface2Brush}"
-                    VerticalAlignment="Top">
-                <Image Source="{Binding IconPath}" Stretch="UniformToFill"/>
-            </Border>
+            <!-- Icon + settings button under icon -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="64"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Width="52"
+                        Height="52"
+                        CornerRadius="14"
+                        Background="{StaticResource BgSurface2Brush}"
+                        VerticalAlignment="Top">
+                    <Image Source="{Binding IconPath}" Stretch="UniformToFill"/>
+                </Border>
+
+                <Button Grid.Row="1"
+                        Width="52"
+                        Height="22"
+                        Margin="0,6,0,0"
+                        Background="{StaticResource GrayDarkBrush}"
+                        Foreground="{StaticResource TextPrimaryBrush}"
+                        BorderBrush="#00000000"
+                        FontSize="12"
+                        Content="⚙"
+                        ToolTip="Настройки фраз"
+                        Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=SettingsCommand}"
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=SettingsCommandParameter}"/>
+            </Grid>
 
             <!-- Text block -->
             <Grid Grid.Column="1" Margin="12,0,0,0">
@@ -43,22 +63,20 @@
 
                 <!-- Title (view + edit) -->
                 <Grid Grid.Row="0">
-                    <!-- обычный заголовок -->
                     <TextBlock x:Name="TitleText"
                                Text="{Binding Name}"
                                Foreground="{StaticResource TextPrimaryBrush}"
-                               FontSize="18"
+                               FontSize="16"
                                FontWeight="SemiBold"
                                TextTrimming="CharacterEllipsis"
                                VerticalAlignment="Center"/>
 
-                    <!-- редактирование заголовка -->
                     <TextBox x:Name="TitleEdit"
                              Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              Background="{StaticResource BgSurface2Brush}"
                              Foreground="{StaticResource TextPrimaryBrush}"
                              BorderBrush="#00000000"
-                             FontSize="18"
+                             FontSize="16"
                              FontWeight="SemiBold"
                              Padding="6,3"
                              Visibility="Collapsed"
