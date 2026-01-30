@@ -26,6 +26,7 @@ namespace Mobius.ViewModels
             SaveToFileCommand = new RelayCommand(SaveToFile);
             LoadFromFileCommand = new RelayCommand(LoadFromFile);
 
+            // Можно оставлять через свойства — теперь безопасно, потому что UpdateState вызываем через SafeUpdateVoiceState()
             SaveFolder = Directory.GetCurrentDirectory();
             VoskModelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "vosk-model");
 
@@ -42,7 +43,7 @@ namespace Mobius.ViewModels
             set
             {
                 if (Set(ref _selectedMicrophone, value))
-                    _root.Voice.UpdateState();
+                    SafeUpdateVoiceState();
             }
         }
 
@@ -73,7 +74,7 @@ namespace Mobius.ViewModels
             set
             {
                 if (Set(ref _voskModelPath, value))
-                    _root.Voice.UpdateState();
+                    SafeUpdateVoiceState();
             }
         }
 
@@ -123,6 +124,22 @@ namespace Mobius.ViewModels
         private void LoadFromFile()
         {
             // TODO
+        }
+
+        /// <summary>
+        /// FIX: SettingsViewModel создаётся ДО VoiceCoordinator (см. MainViewModel),
+        /// поэтому во время ранней инициализации _root.Voice может быть null.
+        /// </summary>
+        private void SafeUpdateVoiceState()
+        {
+            try
+            {
+                _root?.Voice?.UpdateState();
+            }
+            catch
+            {
+                // Не валим UI из-за голоса
+            }
         }
 
         public sealed class MicDevice

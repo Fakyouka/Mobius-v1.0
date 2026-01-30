@@ -11,6 +11,8 @@ namespace Mobius.Services.Voice
     /// Сервис распознавания речи.
     /// ВАЖНО: Vosk подключается через reflection, чтобы проект собирался даже если NuGet Vosk не подтянулся.
     /// Если Vosk реально установлен/доступен — распознавание будет работать.
+    ///
+    /// Поддерживает Start(modelPath, microphoneName) — это нужно VoiceCoordinator'у.
     /// </summary>
     public sealed class VoskSpeechService : IDisposable
     {
@@ -61,7 +63,7 @@ namespace Mobius.Services.Voice
         }
 
         /// <summary>
-        /// Синхронный запуск (под то, что у тебя дергает VoiceCoordinator).
+        /// Синхронный запуск (старый вариант).
         /// </summary>
         public void Start(int deviceNumber = 0)
         {
@@ -69,7 +71,16 @@ namespace Mobius.Services.Voice
         }
 
         /// <summary>
-        /// Асинхронный запуск.
+        /// НОВОЕ: запуск с путём к модели и именем микрофона.
+        /// Это ровно под вызов из VoiceCoordinator: Start(modelPath, microphoneName)
+        /// </summary>
+        public void Start(string modelPath, string? microphoneName)
+        {
+            StartAsync(modelPath, microphoneName).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Асинхронный запуск (старый вариант).
         /// </summary>
         public Task StartAsync(int deviceNumber = 0, CancellationToken ct = default)
         {
@@ -108,6 +119,18 @@ namespace Mobius.Services.Voice
             }
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// НОВОЕ: асинхронный запуск с путём к модели и именем микрофона.
+        /// </summary>
+        public Task StartAsync(string modelPath, string? microphoneName, CancellationToken ct = default)
+        {
+            if (!string.IsNullOrWhiteSpace(modelPath))
+                SetModelPath(modelPath);
+
+            var deviceNumber = ResolveDeviceNumber(microphoneName);
+            return StartAsync(deviceNumber, ct);
         }
 
         public void Stop()
@@ -362,6 +385,35 @@ namespace Mobius.Services.Voice
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(VoskSpeechService));
+        }
+
+        /// <summary>
+        /// Подбор номера устройства по имени микрофона (NAudio).
+        /// Если имя пустое или не найдено — вернёт 0.
+        /// </summary>
+        private static int ResolveDeviceNumber(string? microphoneName)
+        {
+            if (string.IsNullOrWhiteSpace(microphoneName))
+                return 0;
+
+            try
+            {
+                for (int i = 0; i < WaveIn.DeviceCount; i++)
+                {
+                    var caps = WaveIn.GetCapabilities(i);
+                    if (caps.ProductName != null &&
+                        caps.ProductName.IndexOf(microphoneName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return i;
+                    }
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return 0;
         }
 
         public void Dispose()
