@@ -66,13 +66,23 @@ namespace Mobius.ViewModels
         public RelayCommand AddPhraseCommand { get; }
         public RelayCommand<PhraseModel> RemovePhraseCommand { get; }
 
+        /// <summary>
+        /// То, что рисуется на кнопке включения/выключения распознавания речи (MainWindow.xaml).
+        /// </summary>
+        public string SpeechButtonLabel => SpeechMasterEnabled ? "🎤" : "🔇";
+
         public bool SpeechMasterEnabled
         {
             get => _speechMasterEnabled;
             set
             {
                 if (Set(ref _speechMasterEnabled, value))
+                {
+                    // Обновить текст/иконку на кнопке
+                    Raise(nameof(SpeechButtonLabel));
+
                     AddLog("Speech master: " + (value ? "ON" : "OFF"));
+                }
             }
         }
 
