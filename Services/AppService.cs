@@ -15,7 +15,7 @@ namespace Mobius.Services
             Config = new ConfigService();
 
             var cacheDir = Path.Combine(baseDir, "cache");
-            Steam = new SteamApiClient(cacheDir);
+            Steam = new SteamApiClient();
 
             Voice = new VoskVoiceService
             {

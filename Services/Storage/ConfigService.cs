@@ -1,33 +1,58 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization.Json;
+using Newtonsoft.Json;
 using Mobius.Models;
 
 namespace Mobius.Services.Storage
 {
-    public class ConfigService
+    public sealed class ConfigService
     {
-        private const string FileName = "mobius_config.json";
+        private readonly string _configPath;
 
-        public List<AppEntryModel> LoadOrDefault()
+        public ConfigService()
         {
-            if (!File.Exists(FileName))
+            _configPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "mobius.config.json"
+            );
+        }
+        public List<AppEntryModel> LoadApps()
+        {
+            if (!File.Exists(_configPath))
                 return new List<AppEntryModel>();
 
-            using (var fs = File.OpenRead(FileName))
+            try
             {
-                var serializer = new DataContractJsonSerializer(typeof(List<AppEntryModel>));
-                return (List<AppEntryModel>)serializer.ReadObject(fs);
+                var json = File.ReadAllText(_configPath);
+
+                if (string.IsNullOrWhiteSpace(json))
+                    return new List<AppEntryModel>();
+
+                var apps = JsonConvert.DeserializeObject<List<AppEntryModel>>(json);
+                return apps ?? new List<AppEntryModel>();
+            }
+            catch
+            {
+                return new List<AppEntryModel>();
             }
         }
 
-        public void Save(IEnumerable<AppEntryModel> apps)
+        public void SaveApps(IEnumerable<AppEntryModel> apps)
         {
-            using (var fs = File.Create(FileName))
-            {
-                var serializer = new DataContractJsonSerializer(typeof(List<AppEntryModel>));
-                serializer.WriteObject(fs, new List<AppEntryModel>(apps));
-            }
+            var tmp = _configPath + ".tmp";
+
+            var json = JsonConvert.SerializeObject(
+                apps ?? new List<AppEntryModel>(),
+                Formatting.Indented
+            );
+
+            File.WriteAllText(tmp, json);
+
+            if (File.Exists(_configPath))
+                File.Delete(_configPath);
+
+            File.Move(tmp, _configPath);
         }
     }
 }

@@ -9,50 +9,53 @@
         ShowInTaskbar="False"
         Topmost="True">
 
-    <Border Background="{StaticResource BgSurfaceBrush}"
+	<Border Background="{StaticResource BgSurfaceBrush}"
             CornerRadius="18"
             Padding="12">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
 
-            <TextBlock Text="Debug"
+			<TextBlock Text="Debug"
                        Foreground="{StaticResource TextPrimaryBrush}"
                        FontSize="16"
                        FontWeight="SemiBold"
                        Margin="4,0,0,10"/>
 
-            <Border Grid.Row="1"
+			<Border Grid.Row="1"
                     Background="{StaticResource BgSurface2Brush}"
                     CornerRadius="14"
                     Padding="10"
                     Margin="0,0,0,10">
-                <StackPanel>
-                    <TextBlock Text="partial:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
-                    <TextBlock Text="{Binding LastHeardPartial}"
+				<StackPanel>
+					<TextBlock Text="partial:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+					<TextBlock Text="{Binding LastHeardPartial}"
                                Foreground="{StaticResource TextPrimaryBrush}"
                                TextWrapping="Wrap"
                                Margin="0,4,0,10"/>
 
-                    <TextBlock Text="final:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
-                    <TextBlock Text="{Binding LastHeardFinal}"
+					<TextBlock Text="final:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+					<TextBlock Text="{Binding LastHeardFinal}"
                                Foreground="{StaticResource TextPrimaryBrush}"
                                TextWrapping="Wrap"
                                Margin="0,4,0,0"/>
-                </StackPanel>
-            </Border>
+				</StackPanel>
+			</Border>
 
-            <ListBox Grid.Row="2"
-                     ItemsSource="{Binding DebugLogs}"
-                     Background="{StaticResource BgSurface2Brush}"
-                     BorderBrush="#00000000"
-                     Foreground="{StaticResource TextPrimaryBrush}"
-                     Padding="8"
-                     CornerRadius="14"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-        </Grid>
-    </Border>
+			<!-- FIX: CornerRadius переносим на Border -->
+			<Border Grid.Row="2"
+                    Background="{StaticResource BgSurface2Brush}"
+                    CornerRadius="14">
+				<ListBox ItemsSource="{Binding DebugLogs}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Foreground="{StaticResource TextPrimaryBrush}"
+                         Padding="8"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+			</Border>
+		</Grid>
+	</Border>
 </Window>
