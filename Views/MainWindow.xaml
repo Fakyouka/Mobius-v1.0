@@ -1,139 +1,61 @@
 ﻿<Window x:Class="Mobius.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:conv="clr-namespace:Mobius.Converters"
         Title="Mobius"
-        Width="980"
-        Height="640"
-        WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
-        AllowsTransparency="True"
-        Background="Transparent">
+        Width="1200" Height="780"
+        Background="#0C0F13"
+        WindowStartupLocation="CenterScreen">
 
-    <Window.Resources>
-        <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="74"/>
+        </Grid.RowDefinitions>
 
-        <conv:BoolToBrushConverter x:Key="SpeechBrush"
-                                   TrueBrush="{StaticResource GreenBrush}"
-                                   FalseBrush="{StaticResource RedBrush}"/>
-    </Window.Resources>
+        <!-- Контент -->
+        <Frame Grid.Row="0" />
 
-    <Border Background="{StaticResource BgWindowBrush}"
-            CornerRadius="22"
-            SnapsToDevicePixels="True">
+        <!-- Нижняя панель -->
+        <Border Grid.Row="1"
+                Background="#10141A"
+                BorderThickness="1"
+                BorderBrush="#1E2630">
+            <Grid Margin="18,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-        <Grid Margin="12">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <!-- TOP BAR (отдельная плашка светлее) -->
-            <Border Grid.Row="0"
-                    Background="{StaticResource BgSurfaceBrush}"
-                    CornerRadius="18"
-                    Padding="12"
-                    Margin="0,0,0,10">
-                <Grid MouseLeftButtonDown="TopBar_MouseLeftButtonDown">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Text="Mobius"
-                               Style="{StaticResource H1}"
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Распознавание"
+                               Foreground="#A9B3BF"
                                VerticalAlignment="Center"
-                               Margin="6,0,0,0"/>
+                               Margin="0,0,10,0"/>
 
-                    <!-- Hide from Alt+Tab (gray minus) -->
-                    <Button Grid.Column="1"
-                            Style="{StaticResource MiniWindowButton}"
-                            Content="−"
-                            Margin="0,0,8,0"
-                            ToolTip="Свернуть и скрыть из Alt+Tab"
-                            Click="HideFromAltTab_Click"/>
+                    <!-- Статус: теперь зависит от SpeechIsRunning -->
+                    <Border Width="10" Height="10" CornerRadius="5" VerticalAlignment="Center">
+                        <Border.Background>
+                            <Binding Path="SpeechIsRunning"
+                                     Converter="{StaticResource BoolToBrushConverter}"/>
+                        </Border.Background>
+                    </Border>
 
-                    <!-- Close (red plus) -->
-                    <Button Grid.Column="2"
-                            Style="{StaticResource MiniWindowButton}"
-                            Background="{StaticResource RedBrush}"
-                            Content="+"
-                            ToolTip="Закрыть"
-                            Click="Close_Click"/>
-                </Grid>
-            </Border>
+                    <TextBlock Text="{Binding SpeechIsRunning, StringFormat={}{0}}"
+                               Foreground="#6E7A88"
+                               Margin="8,0,0,0"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
 
-            <!-- MAIN CONTENT AREA (отдельная плашка) -->
-            <Border Grid.Row="1"
-                    Background="{StaticResource BgWindowBrush}"
-                    CornerRadius="18"
-                    Padding="0"
-                    Margin="0,0,0,10">
-                <ContentControl Content="{Binding CurrentView}" />
-            </Border>
-
-            <!-- BOTTOM BAR -->
-            <Border Grid.Row="2"
-                    Background="{StaticResource PurpleBarBrush}"
-                    CornerRadius="18"
-                    Padding="14"
-                    MinHeight="96">
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Refresh (green) -->
-                    <Button Grid.Column="0"
-                            Style="{StaticResource IconButton}"
-                            Background="{StaticResource GreenBrush}"
-                            Content="⟳"
-                            ToolTip="Обновить список"
-                            Command="{Binding Library.RefreshCommand}"
-                            Margin="0,0,10,0"/>
-
-                    <!-- Speech Toggle (green/red) -->
-                    <Button Grid.Column="1"
-                            Style="{StaticResource IconButton}"
-                            Background="{Binding Library.SpeechMasterEnabled, Converter={StaticResource SpeechBrush}}"
-                            Content="{Binding Library.SpeechButtonLabel}"
-                            ToolTip="Распознавание речи (вкл/выкл)"
-                            Command="{Binding Library.ToggleSpeechCommand}"
-                            Margin="0,0,10,0"/>
-
-                   
-                    <!-- Add local app -->
-                    <Button Grid.Column="2"
-                            Style="{StaticResource IconButton}"
-                            Background="{StaticResource PurpleBar2Brush}"
-                            Content="＋"
-                            ToolTip="Добавить приложение (exe)"
-                            Command="{Binding Library.AddAppCommand}"
-                            Margin="0,0,10,0"/>
-
-                    <!-- Settings (gray) -->
-                    <Button Grid.Column="3"
-                            Style="{StaticResource IconButton}"
-                            Background="{StaticResource GrayDarkBrush}"
-                            Content="⚙"
-                            ToolTip="Настройки"
-                            Command="{Binding Library.OpenSettingsCommand}"
-                            Margin="0,0,10,0"/>
-
-                    <TextBlock Grid.Column="5"
-                               Text="Mobius • Library"
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               VerticalAlignment="Center"
-                               Margin="14,0,0,0"/>
-                </Grid>
-            </Border>
-        </Grid>
-    </Border>
+                <ToggleButton Grid.Column="1"
+                              Width="160" Height="42"
+                              Content="Голос"
+                              IsChecked="{Binding SpeechMasterEnabled}"
+                              Background="#141A22"
+                              Foreground="White"
+                              BorderThickness="1"
+                              BorderBrush="#243040"
+                              Cursor="Hand"/>
+            </Grid>
+        </Border>
+    </Grid>
 </Window>

@@ -1,87 +1,48 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
-using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 
 namespace Mobius.Services.Steam
 {
     public class SteamApiClient
     {
-        private static readonly HttpClient Http = new HttpClient();
-        private const string CacheFolder = "cache";
+        private static readonly HttpClient _http = new HttpClient();
 
-        public SteamApiClient()
+        public async Task<string> DownloadIconAsync(string appId)
         {
-            if (!Directory.Exists(CacheFolder))
-                Directory.CreateDirectory(CacheFolder);
-        }
-
-        public List<SteamGameResult> Search(string query)
-        {
-            var url = "https://store.steampowered.com/api/storesearch/?term="
-                      + Uri.EscapeDataString(query)
-                      + "&l=english&cc=us";
-
-            var json = Http.GetStringAsync(url).Result;
-            var root = JObject.Parse(json);
-
-            var results = new List<SteamGameResult>();
-            var items = root["items"];
-            if (items == null) return results;
-
-            foreach (var item in items)
-            {
-                int appId = item.Value<int>("id");
-                string name = item.Value<string>("name");
-                string icon = DownloadIcon(appId);
-
-                results.Add(new SteamGameResult
-                {
-                    AppId = appId,
-                    Name = name,
-                    IconPath = icon
-                });
-            }
-
-            return results;
-        }
-
-        private string DownloadIcon(int appId)
-        {
-            var path = Path.Combine(CacheFolder, appId + ".jpg");
-            if (File.Exists(path))
-                return path;
-
-            string square = "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appId + "/capsule_184x184.jpg";
-            string header = "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appId + "/header.jpg";
+            if (string.IsNullOrWhiteSpace(appId))
+                return null;
 
             try
             {
-                var bytes = Http.GetByteArrayAsync(square).Result;
-                File.WriteAllBytes(path, bytes);
-                return path;
-            }
-            catch
-            {
-                try
-                {
-                    var bytes = Http.GetByteArrayAsync(header).Result;
-                    File.WriteAllBytes(path, bytes);
-                    return path;
-                }
-                catch
-                {
+                // Абсолютный путь, чтобы WPF точно находил картинку
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                var iconsDir = Path.Combine(baseDir, "cache", "icons");
+                Directory.CreateDirectory(iconsDir);
+
+                var outPath = Path.Combine(iconsDir, $"{appId}.jpg");
+                if (File.Exists(outPath))
+                    return outPath;
+
+                // Простой CDN-фоллбек
+                // (в будущем можно подтянуть точную иконку через appdetails API,
+                // но это уже сетевой парсинг JSON — пока хватит этого)
+                var url = $"https://cdn.akamai.steamstatic.com/steam/apps/{appId}/header.jpg";
+
+                var bytes = await _http.GetByteArrayAsync(url);
+                if (bytes == null || bytes.Length == 0)
                     return null;
-                }
+
+                await File.WriteAllBytesAsync(outPath, bytes);
+                return outPath;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[STEAM] DownloadIconAsync ERROR: " + ex);
+                return null;
             }
         }
-    }
-
-    public class SteamGameResult
-    {
-        public int AppId { get; set; }
-        public string Name { get; set; }
-        public string IconPath { get; set; }
     }
 }
